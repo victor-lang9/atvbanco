@@ -1,0 +1,174 @@
+<?php 
+
+$clientes = [];
+$contas = [];
+
+function validarCpf($cpf) {
+    return strlen($cpf) == 11 && is_numeric($cpf);
+}
+
+function cadastrarCliente(&$clientes, string $nome, string $cpf, string $telefone): void {
+    if (!validarCpf($cpf)) {
+        print "CPF inválido. O CPF deve ter 11 dígitos.\n";
+        return;
+    }
+
+    foreach ($clientes as $cliente) {
+        if ($cliente['cpf'] == $cpf) {
+            print "CPF já cadastrado.\n";
+            return;
+        }
+    }
+
+    $cliente = [
+        "nome" => $nome,
+        "cpf"  => $cpf,
+        "telefone" => $telefone
+    ];
+
+    $clientes[] = $cliente;
+    print "Cliente cadastrado com sucesso!\n";
+}
+
+
+function cadastrarConta(&$contas, $cpfCliente): string {
+    $conta = [
+        "numeroConta" => uniqid(),
+        "cpfCliente" => $cpfCliente,
+        "saldo" => 0
+    ];
+
+    $contas[] = $conta;
+    print "Conta criada com sucesso! Número da conta: {$conta['numeroConta']}\n";
+    return $conta['numeroConta'];
+}
+
+function depositar(&$contas, $numeroConta, $quantia) {
+    if ($quantia <= 0) {
+        print "Valor de depósito inválido. Deve ser um valor positivo.\n";
+        return;
+    }
+
+    $encontrada = false;
+    foreach ($contas as &$conta) {
+        if ($conta['numeroConta'] == $numeroConta) {
+            $conta['saldo'] += $quantia;
+            print "Depósito de R$ {$quantia} realizado com sucesso na conta {$numeroConta}\n";
+            $encontrada = true;
+            break;
+        }
+    }
+
+    if (!$encontrada) {
+        print "Conta $numeroConta não encontrada.\n";
+    }
+}
+
+function sacar(&$contas, $numeroConta, $quantia) {
+    if ($quantia <= 0) {
+        print "Valor de saque inválido. Deve ser um valor positivo.\n";
+        return;
+    }
+
+    $encontrada = false;
+    foreach ($contas as &$conta) {
+        if ($conta['numeroConta'] == $numeroConta) {
+            if ($conta['saldo'] < $quantia) {
+                print "Saldo insuficiente para realizar o saque.\n";
+            } else {
+                $conta['saldo'] -= $quantia;
+                print "Saque de R$ {$quantia} realizado com sucesso da conta {$numeroConta}\n";
+            }
+            $encontrada = true;
+            break;
+        }
+    }
+
+    if (!$encontrada) {
+        print "Conta $numeroConta não encontrada.\n";
+    }
+}
+
+
+function consultarSaldo(&$contas, $numeroConta) {
+    $encontrada = false;
+    foreach ($contas as $conta) {
+        if ($conta['numeroConta'] == $numeroConta) {
+            print "Saldo da conta {$numeroConta}: R$ {$conta['saldo']}\n";
+            $encontrada = true;
+            break;
+        }
+    }
+
+    if (!$encontrada) {
+        print "Conta $numeroConta não encontrada.\n";
+    }
+}
+
+
+function menu() {
+    global $clientes, $contas;
+
+    while (true) {
+        echo "\n--- MENU ---\n";
+        echo "1. Cadastrar Cliente\n";
+        echo "2. Criar Conta\n";
+        echo "3. Depositar\n";
+        echo "4. Sacar\n";
+        echo "5. Consultar Saldo\n";
+        echo "6. Sair\n";
+        echo "Escolha uma opção: ";
+
+        $opcao = trim(fgets(STDIN));
+
+        switch ($opcao) {
+            case 1:
+                echo "Digite o nome do cliente: ";
+                $nome = trim(fgets(STDIN));
+                echo "Digite o CPF do cliente: ";
+                $cpf = trim(fgets(STDIN));
+                echo "Digite o telefone do cliente: ";
+                $telefone = trim(fgets(STDIN));
+                cadastrarCliente($clientes, $nome, $cpf, $telefone);
+                break;
+
+            case 2:
+                echo "Digite o CPF do cliente para criar a conta: ";
+                $cpfCliente = trim(fgets(STDIN));
+                cadastrarConta($contas, $cpfCliente);
+                break;
+
+            case 3:
+                echo "Digite o número da conta para depósito: ";
+                $numeroConta = trim(fgets(STDIN));
+                echo "Digite o valor para depósito: ";
+                $quantia = floatval(trim(fgets(STDIN)));
+                depositar($contas, $numeroConta, $quantia);
+                break;
+
+            case 4:
+                echo "Digite o número da conta para saque: ";
+                $numeroConta = trim(fgets(STDIN));
+                echo "Digite o valor para saque: ";
+                $quantia = floatval(trim(fgets(STDIN)));
+                sacar($contas, $numeroConta, $quantia);
+                break;
+
+            case 5:
+                echo "Digite o número da conta para consultar saldo: ";
+                $numeroConta = trim(fgets(STDIN));
+                consultarSaldo($contas, $numeroConta);
+                break;
+
+            case 6:
+                echo "Saindo...\n";
+                exit;
+
+            default:
+                echo "Opção inválida. Tente novamente.\n";
+        }
+    }
+}
+
+
+menu();
